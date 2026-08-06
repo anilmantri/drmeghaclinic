@@ -1,0 +1,26 @@
+name = "drmegha-skinscan"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# Locks down CORS so only your site can call this Worker.
+# Set to "*" only while testing locally.
+[vars]
+ALLOWED_ORIGIN = "https://drmegha.in"
+
+# Create with: wrangler kv:namespace create RATE_LIMIT
+# Then paste the returned id below.
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Create with: wrangler d1 create drmegha-leads
+# Then paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "drmegha-leads"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Secrets (do NOT put these here — set via CLI, see README.md):
+#   wrangler secret put ANTHROPIC_API_KEY
+#   wrangler secret put WEB3FORMS_KEY
+#   wrangler secret put ADMIN_KEY

@@ -42,6 +42,65 @@
     .display{font-family:var(--font-display);font-size:clamp(2.4rem,5vw,4rem);font-weight:600;line-height:1.12;color:var(--c-ink)}
     .display-sm{font-family:var(--font-display);font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:600;line-height:1.18}
     .display em,.display-sm em{font-style:italic;background:var(--gold-text);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+    /* SKIN SCAN WIDGET */
+    .scan-widget{max-width:460px;margin:0 auto;background:var(--c-white);border-radius:var(--r-xl);box-shadow:var(--shadow-lg);border:1px solid var(--c-border);overflow:hidden}
+    .scan-stage{padding:36px 32px}
+    .scan-stage-tight{padding:24px}
+    .scan-consent-box{background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);padding:18px 20px;margin-bottom:24px}
+    .scan-consent-row{display:flex;gap:12px;align-items:flex-start;font-size:.82rem;color:var(--c-ink-2);line-height:1.6}
+    .scan-consent-row+.scan-consent-row{margin-top:12px}
+    .scan-consent-row input[type="checkbox"]{margin-top:3px;flex-shrink:0;width:16px;height:16px;accent-color:var(--gold-400)}
+    .scan-fine{font-size:.72rem;color:var(--c-ink-3);font-style:italic;line-height:1.5}
+    .scan-btn{width:100%;justify-content:center;padding:15px;font-size:.85rem;letter-spacing:.06em;border-radius:var(--r-md)}
+    .scan-btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none}
+    .scan-video-wrap{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#0d0b0a;aspect-ratio:3/4}
+    .scan-video-wrap video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+    .scan-oval-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .scan-oval-guide span{width:62%;height:78%;border:2px solid rgba(212,168,67,.85);border-radius:50%/60%}
+    .scan-close-btn{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.4);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.9rem;border:none}
+    .scan-hint{font-size:.78rem;color:var(--c-ink-3);text-align:center;margin:14px 0}
+    .scan-preview-img{border-radius:var(--r-lg);overflow:hidden;aspect-ratio:3/4}
+    .scan-preview-img img{width:100%;height:100%;object-fit:cover}
+    .scan-actions-row{display:flex;gap:10px;margin-top:16px}
+    .scan-actions-row .btn{flex:1;justify-content:center;font-size:.8rem;padding:13px}
+    .scan-spinner{width:42px;height:42px;margin:0 auto 18px;border-radius:50%;border:3px solid rgba(184,134,11,.18);border-top-color:var(--gold-400);animation:scanspin .9s linear infinite}
+    @keyframes scanspin{to{transform:rotate(360deg)}}
+    @media (prefers-reduced-motion:reduce){.scan-spinner{animation-duration:2.4s}}
+    .scan-summary{font-size:.92rem;color:var(--c-ink);line-height:1.7;margin-bottom:20px}
+    .scan-obs-list{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+    .scan-obs-card{background:var(--c-surface);border:1px solid var(--c-border);border-left:3px solid var(--gold-300);border-radius:var(--r-sm);padding:12px 16px}
+    .scan-obs-card.sev-noticeable{border-left-color:#B05A3A}
+    .scan-obs-card.sev-moderate{border-left-color:var(--gold-500)}
+    .scan-obs-card.sev-mild{border-left-color:#8A9A6E}
+    .scan-obs-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+    .scan-obs-concern{font-size:.85rem;font-weight:600;color:var(--c-ink);text-transform:capitalize}
+    .scan-obs-sev{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink-3)}
+    .scan-obs-area{font-size:.7rem;color:var(--c-ink-3);text-transform:capitalize;margin-bottom:5px}
+    .scan-obs-note{font-size:.8rem;color:var(--c-ink-2);line-height:1.55}
+    .scan-focus-wrap{margin-bottom:22px}
+    .scan-focus-title{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-500);margin-bottom:10px;font-weight:600}
+    .scan-focus-pills{display:flex;flex-wrap:wrap;gap:8px}
+    .scan-focus-pill{font-size:.75rem;padding:6px 14px;border-radius:var(--r-pill);background:var(--gold-100);color:var(--gold-500);font-weight:600}
+    .scan-lead-form{display:flex;flex-direction:column;gap:10px;margin:20px 0}
+    .scan-lead-form input{padding:12px 14px;border:1px solid var(--c-border);border-radius:var(--r-sm);font-family:var(--font-body);font-size:.85rem;background:var(--c-white);width:100%}
+    .scan-lead-form input:focus{outline:none;border-color:var(--gold-300)}
+    .scan-lead-row{display:flex;gap:10px}
+    .scan-lead-row input{flex:1;min-width:0}
+    .scan-angle-progress{display:flex;justify-content:center;gap:8px;margin-bottom:12px}
+    .scan-angle-dot{width:8px;height:8px;border-radius:50%;background:var(--c-border);transition:background .2s}
+    .scan-angle-dot.done{background:var(--gold-400)}
+    .scan-angle-dot.current{background:var(--gold-300);box-shadow:0 0 0 3px rgba(212,168,67,.25)}
+    .scan-multi-preview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .scan-multi-preview-item{position:relative;border-radius:var(--r-sm);overflow:hidden;aspect-ratio:3/4;background:var(--c-surface)}
+    .scan-multi-preview-item img{width:100%;height:100%;object-fit:cover}
+    .scan-multi-preview-label{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.6),transparent);color:#fff;font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;text-align:center;padding:5px 0 4px;font-weight:600}
+    .scan-oval-guide.angle-left span,.scan-oval-guide.angle-right span{transform:rotate(0deg);border-radius:55%/60%}
+    .scan-disclaimer{font-size:.68rem;color:var(--c-ink-3);line-height:1.6;text-align:center;font-style:italic;margin-top:16px}
+    .scan-again-link{display:block;text-align:center;font-size:.76rem;color:var(--c-ink-3);text-decoration:underline;margin-top:10px;background:none;border:none;width:100%;padding:8px;cursor:pointer;font-family:inherit}
+    .scan-error-icon{font-size:2rem;text-align:center;margin-bottom:10px}
+    [data-scan-stage]{display:none}
+    [data-scan-stage].active{display:block}
     .lead{font-size:1rem;color:var(--c-ink-2);max-width:580px;line-height:1.8;font-weight:300}
     .gold-divider{display:flex;align-items:center;gap:12px;margin:20px 0 36px}
     .gold-divider::before,.gold-divider::after{content:'';flex:1;max-width:60px;height:1px;background:var(--gold-gradient)}
@@ -288,6 +347,7 @@
 
       <ul class="nav-links">
         <li><a href="#home">Home</a></li>
+        <li><a href="#skin-scan">Skin Scan</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="#skin-treatments">Skin</a></li>
         <li><a href="#hair-treatments">Hair</a></li>
@@ -310,6 +370,7 @@
 
 <div class="mobile-menu" id="mobileMenu">
   <a href="#home" onclick="closeMobile()">Home</a>
+  <a href="#skin-scan" onclick="closeMobile()">✦ AI Skin Scan</a>
   <a href="#about" onclick="closeMobile()">About Dr. Megha</a>
   <a href="#skin-treatments" onclick="closeMobile()">Skin Treatments</a>
   <a href="#hair-treatments" onclick="closeMobile()">Hair Treatments</a>
@@ -331,7 +392,7 @@
         <div class="hero-badge"><span class="badge-diamond"></span>Pune's Premier Aesthetic Clinic</div>
         <h1 class="hero-display">Where Science<br/>Meets<em>Beauty</em></h1>
         <p class="hero-tagline">— Dr. Megha's Aesthetic Clinic, Pune</p>
-        <p class="hero-lead">Advanced cosmetological &amp; aesthetic care tailored to your unique skin story. Expert treatments backed by science, delivered with compassion.</p>
+        <p class="hero-lead">Advanced dermatological &amp; aesthetic care tailored to your unique skin story. Expert treatments backed by science, delivered with compassion.</p>
         <div class="hero-actions">
           <a href="#contact" class="btn btn-gold">✦ Book Free Consultation</a>
           <a href="https://wa.me/919876543210?text=Hello%2C%20I%20would%20like%20to%20book%20an%20appointment%20at%20Dr.%20Megha%27s%20Clinic" class="btn btn-ghost-light" target="_blank" rel="noopener">💬 WhatsApp</a>
@@ -378,6 +439,96 @@
   </div>
 </section>
 
+<!-- AI SKIN SCAN -->
+<section id="skin-scan" class="section iris-band">
+  <div class="container">
+    <div style="text-align:center;max-width:620px;margin:0 auto 44px">
+      <p class="eyebrow" style="justify-content:center">AI Skin Insight — Free</p>
+      <h2 class="display-sm">See What Your Skin<br/><em>Is Telling You</em></h2>
+      <div class="gold-divider" style="justify-content:center"><div class="gold-divider-diamond"></div></div>
+      <p class="lead" style="margin:0 auto">Take a quick selfie for an instant, AI-generated snapshot of your skin — texture, tone, and a few gentle pointers, before your visit with Dr. Megha.</p>
+    </div>
+
+    <div class="scan-widget" id="scanWidget">
+
+      <!-- STAGE: CONSENT -->
+      <div class="scan-stage" data-scan-stage="consent">
+        <div class="scan-consent-box">
+          <div class="scan-consent-row">
+            <input type="checkbox" id="scanConsent1"/>
+            <label for="scanConsent1">I agree to 3 quick photos (front, left, right) being analyzed by an AI model to generate this skin snapshot. My photos are processed only for this session and are not stored, unless I choose to share my report below.</label>
+          </div>
+          <div class="scan-consent-row">
+            <input type="checkbox" id="scanConsent2"/>
+            <label for="scanConsent2">I understand this is an <strong>indicative overview only</strong>, not a medical diagnosis, and does not replace an in-person consultation.</label>
+          </div>
+        </div>
+        <button class="btn btn-gold scan-btn" id="scanStartBtn" disabled>✦ Start My Skin Scan</button>
+        <p class="scan-fine" style="text-align:center;margin-top:12px">Works best on mobile, in good natural light.</p>
+      </div>
+
+      <!-- STAGE: CAMERA -->
+      <div class="scan-stage scan-stage-tight" data-scan-stage="camera">
+        <div class="scan-angle-progress" id="scanAngleProgress"></div>
+        <div class="scan-video-wrap">
+          <video id="scanVideo" autoplay playsinline muted></video>
+          <div class="scan-oval-guide" id="scanOvalGuide"><span></span></div>
+          <button class="scan-close-btn" id="scanCancelBtn" aria-label="Cancel">✕</button>
+        </div>
+        <p class="scan-hint" id="scanAngleHint">Face a window or bright light. Fill the oval, keep still.</p>
+        <button class="btn btn-gold scan-btn" id="scanCaptureBtn">Capture Photo</button>
+      </div>
+
+      <!-- STAGE: PREVIEW (multi-angle review) -->
+      <div class="scan-stage scan-stage-tight" data-scan-stage="preview">
+        <div class="scan-multi-preview" id="scanMultiPreview"></div>
+        <div class="scan-actions-row">
+          <button class="btn btn-outline-gold" id="scanRetakeAllBtn">↺ Retake All</button>
+          <button class="btn btn-gold" id="scanAnalyzeBtn">✦ Analyze My Skin</button>
+        </div>
+      </div>
+
+      <!-- STAGE: ANALYZING -->
+      <div class="scan-stage" data-scan-stage="analyzing" style="text-align:center;padding:56px 32px">
+        <div class="scan-spinner"></div>
+        <div style="font-size:.88rem;color:var(--c-ink-2)">Reading your skin's story…</div>
+      </div>
+
+      <!-- STAGE: REPORT -->
+      <div class="scan-stage" data-scan-stage="report">
+        <p class="eyebrow">Your Snapshot</p>
+        <div class="scan-summary" id="scanSummary"></div>
+        <div class="scan-obs-list" id="scanObsList"></div>
+        <div class="scan-focus-wrap" id="scanFocusWrap" style="display:none">
+          <div class="scan-focus-title">Worth Discussing With Dr. Megha</div>
+          <div class="scan-focus-pills" id="scanFocusPills"></div>
+        </div>
+
+        <form class="scan-lead-form" id="scanLeadForm">
+          <div class="scan-lead-row">
+            <input type="text" id="scanLeadName" placeholder="Your name *" required/>
+            <input type="number" id="scanLeadAge" placeholder="Age (optional)" min="1" max="120"/>
+          </div>
+          <input type="tel" id="scanLeadPhone" placeholder="Phone / WhatsApp *" required/>
+          <input type="text" id="scanLeadCity" placeholder="City *" required/>
+          <button type="submit" class="btn btn-gold scan-btn">Send My Report &amp; Book a Callback</button>
+        </form>
+        <button class="scan-again-link" id="scanAgainBtn">Scan again</button>
+        <p class="scan-disclaimer" id="scanDisclaimer"></p>
+      </div>
+
+      <!-- STAGE: ERROR -->
+      <div class="scan-stage" data-scan-stage="error" style="text-align:center;padding:44px 32px">
+        <div class="scan-error-icon">⚠️</div>
+        <p style="font-size:.85rem;color:var(--c-ink-2);margin-bottom:20px" id="scanErrorMsg"></p>
+        <button class="btn btn-gold scan-btn" id="scanRetryBtn" style="width:auto;display:inline-flex;padding:12px 26px">Try Again</button>
+      </div>
+
+    </div>
+    <canvas id="scanCanvas" style="display:none"></canvas>
+  </div>
+</section>
+
 <!-- ABOUT -->
 <section id="about" class="section">
   <div class="container">
@@ -391,15 +542,15 @@
       </div>
       <div>
         <p class="eyebrow">About the Doctor</p>
-        <h2 class="display-sm">Dr. Megha<br/><em>MD Homeopathy</em></h2>
+        <h2 class="display-sm">Dr. Megha<br/><em>MD Dermatology</em></h2>
         <div class="gold-divider"><div class="gold-divider-diamond"></div></div>
         <blockquote class="about-quote">"Every patient deserves personalised care — because no two skins are the same."</blockquote>
-        <p class="lead" style="margin-bottom:28px">A specialist in clinical and cosmetologiest with over 12 years of experience, Dr. Megha has treated thousands of patients across Pune. Known for evidence-based, patient-first care with the latest aesthetic techniques.</p>
+        <p class="lead" style="margin-bottom:28px">A specialist in clinical and cosmetic dermatology with over 12 years of experience, Dr. Megha has treated thousands of patients across Pune. Known for evidence-based, patient-first care with the latest aesthetic techniques.</p>
         <div class="cred-list">
-          <div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">MD Homeopathy — Bhagvan college, Aurangabad</span><span class="cred-sub">Nashik University</span></div></div>
-          <!--<div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">Fellowship in Cosmetic Dermatology</span><span class="cred-sub">International Society of Dermatology</span></div></div>
+          <div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">MD Dermatology — Grant Medical College, Mumbai</span><span class="cred-sub">Mumbai University · Gold Medalist</span></div></div>
+          <div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">Fellowship in Cosmetic Dermatology</span><span class="cred-sub">International Society of Dermatology</span></div></div>
           <div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">Best Dermatologist Award — 2022 &amp; 2023</span><span class="cred-sub">Pune Medical Association</span></div></div>
-          <div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">Member — IADVL</span><span class="cred-sub">Indian Association of Dermatologists · Life Member</span></div></div> -->
+          <div class="cred-item"><div class="cred-dot"></div><div><span class="cred-label">Member — IADVL</span><span class="cred-sub">Indian Association of Dermatologists · Life Member</span></div></div>
         </div>
         <div style="display:flex;gap:14px;flex-wrap:wrap">
           <a href="#contact" class="btn btn-gold">Book Consultation</a>
@@ -530,10 +681,10 @@
       <div>
         <p class="lead" style="max-width:320px">We're here to help. Reach out and our team will respond within a few hours.</p>
         <div class="contact-info-list">
-          <div class="contact-info-item"><div class="contact-icon">📍</div><div><div class="contact-label">Address</div><div class="contact-val">Vitara Diagnostic, Vishal Nagar, Camp,<br/>Pune, Maharashtra 411001</div></div></div>
-          <div class="contact-info-item"><div class="contact-icon">📞</div><div><div class="contact-label">Phone / WhatsApp</div><div class="contact-val"><a href="tel:+919876543210" style="color:var(--gold-400)">+91 9403004242</a></div></div></div>
-          <div class="contact-info-item"><div class="contact-icon">✉️</div><div><div class="contact-label">Email</div><div class="contact-val"><a href="mailto:care@drmegha.in" style="color:var(--gold-400)">dmeghaclinic@gmail.com</a></div></div></div>
-          <div class="contact-info-item"><div class="contact-icon">🕐</div><div><div class="contact-label">Clinic Hours</div><div class="contact-val">Mon–Sat: 11 AM – 5 PM<br/>Sunday: Closed</div></div></div>
+          <div class="contact-info-item"><div class="contact-icon">📍</div><div><div class="contact-label">Address</div><div class="contact-val">123 MG Road, Camp,<br/>Pune, Maharashtra 411001</div></div></div>
+          <div class="contact-info-item"><div class="contact-icon">📞</div><div><div class="contact-label">Phone / WhatsApp</div><div class="contact-val"><a href="tel:+919876543210" style="color:var(--gold-400)">+91 98765 43210</a></div></div></div>
+          <div class="contact-info-item"><div class="contact-icon">✉️</div><div><div class="contact-label">Email</div><div class="contact-val"><a href="mailto:care@drmegha.in" style="color:var(--gold-400)">care@drmegha.in</a></div></div></div>
+          <div class="contact-info-item"><div class="contact-icon">🕐</div><div><div class="contact-label">Clinic Hours</div><div class="contact-val">Mon–Sat: 10 AM – 8 PM<br/>Sunday: 10 AM – 2 PM</div></div></div>
         </div>
         <div class="map-box">
           <div style="font-size:2rem">🗺️</div>
@@ -642,6 +793,10 @@
 <div id="toast">✦ Appointment request sent! Dr. Megha's team will contact you soon.</div>
 
 <script>
+  // ⚠️ CONFIG — set this to your deployed backend URL (see /server/README or root README.md)
+  // Render example: "https://drmegha-skinscan-api.onrender.com"
+  const SCAN_API_BASE = "https://drmegha-skinscan-api.onrender.com";
+
   const navbar=document.getElementById('navbar');
   window.addEventListener('scroll',()=>navbar.classList.toggle('scrolled',scrollY>24),{passive:true});
   const hamburger=document.getElementById('hamburger'),mobileMenu=document.getElementById('mobileMenu');
@@ -665,6 +820,220 @@
   });
   const revealObs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';revealObs.unobserve(e.target)}})},{rootMargin:'0px 0px -70px 0px'});
   document.querySelectorAll('.treatment-card,.testimonial-card,.blog-card,.gallery-item').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(28px)';el.style.transition='opacity .55s ease,transform .55s ease';revealObs.observe(el)});
+
+  /* ===== AI SKIN SCAN WIDGET (multi-angle) ===== */
+  (function(){
+    const stages = document.querySelectorAll('[data-scan-stage]');
+    function showStage(name){
+      stages.forEach(s => s.classList.toggle('active', s.dataset.scanStage === name));
+    }
+    showStage('consent');
+
+    const consent1 = document.getElementById('scanConsent1');
+    const consent2 = document.getElementById('scanConsent2');
+    const startBtn = document.getElementById('scanStartBtn');
+    function refreshStartBtn(){ startBtn.disabled = !(consent1.checked && consent2.checked); }
+    consent1.addEventListener('change', refreshStartBtn);
+    consent2.addEventListener('change', refreshStartBtn);
+
+    const ANGLES = [
+      { key: 'front', label: 'Front', hint: 'Look straight at the camera. Fill the oval, keep still.' },
+      { key: 'left',  label: 'Left profile', hint: 'Turn your head slowly to show your left cheek.' },
+      { key: 'right', label: 'Right profile', hint: 'Turn your head slowly to show your right cheek.' },
+    ];
+
+    const video = document.getElementById('scanVideo');
+    const canvas = document.getElementById('scanCanvas');
+    const angleHint = document.getElementById('scanAngleHint');
+    const angleProgress = document.getElementById('scanAngleProgress');
+    const ovalGuide = document.getElementById('scanOvalGuide');
+    let mediaStream = null;
+    let angleIndex = 0;
+    let capturedImages = {}; // { front: dataUrl, left: dataUrl, right: dataUrl }
+    let lastReport = null;
+
+    function renderAngleProgress(){
+      angleProgress.innerHTML = ANGLES.map((a, i) => {
+        const cls = capturedImages[a.key] ? 'done' : (i === angleIndex ? 'current' : '');
+        return `<span class="scan-angle-dot ${cls}"></span>`;
+      }).join('');
+      angleHint.textContent = ANGLES[angleIndex].hint;
+      ovalGuide.className = 'scan-oval-guide angle-' + ANGLES[angleIndex].key;
+    }
+
+    async function startCamera(){
+      angleIndex = 0;
+      capturedImages = {};
+      showStage('camera');
+      renderAngleProgress();
+      try{
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 960 } },
+          audio: false
+        });
+        video.srcObject = mediaStream;
+      }catch(err){
+        showError('Camera access was denied or is unavailable on this device. Please allow camera access and try again, or use a different browser.');
+      }
+    }
+
+    function stopCamera(){
+      if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+    }
+
+    function showError(msg){
+      stopCamera();
+      document.getElementById('scanErrorMsg').textContent = msg;
+      showStage('error');
+    }
+
+    startBtn.addEventListener('click', startCamera);
+    document.getElementById('scanCancelBtn').addEventListener('click', () => { stopCamera(); showStage('consent'); });
+    document.getElementById('scanRetryBtn').addEventListener('click', () => showStage('consent'));
+
+    function renderMultiPreview(){
+      const wrap = document.getElementById('scanMultiPreview');
+      wrap.innerHTML = ANGLES.map(a => `
+        <div class="scan-multi-preview-item">
+          <img src="${capturedImages[a.key]}" alt="${a.label} selfie"/>
+          <div class="scan-multi-preview-label">${a.label}</div>
+        </div>`).join('');
+    }
+
+    document.getElementById('scanCaptureBtn').addEventListener('click', () => {
+      if(!video.videoWidth){ return; }
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      capturedImages[ANGLES[angleIndex].key] = canvas.toDataURL('image/jpeg', 0.85);
+
+      if(angleIndex < ANGLES.length - 1){
+        angleIndex += 1;
+        renderAngleProgress();
+      }else{
+        stopCamera();
+        renderMultiPreview();
+        showStage('preview');
+      }
+    });
+
+    document.getElementById('scanRetakeAllBtn').addEventListener('click', () => { startCamera(); });
+
+    document.getElementById('scanAnalyzeBtn').addEventListener('click', async () => {
+      showStage('analyzing');
+      try{
+        const images = ANGLES.map(a => ({ angle: a.key, data: capturedImages[a.key].split(',')[1] }));
+        const res = await fetch(SCAN_API_BASE + '/api/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ images })
+        });
+        if(!res.ok){
+          if(res.status === 429) throw new Error('Too many scans right now — please wait a minute and try again.');
+          throw new Error('Something went wrong on our end. Please try again.');
+        }
+        const report = await res.json();
+        lastReport = report;
+        renderReport(report);
+      }catch(err){
+        showError(err.message || "We couldn't complete the analysis. Please try again.");
+      }
+    });
+
+    function severityClass(sev){
+      if(sev === 'noticeable') return 'sev-noticeable';
+      if(sev === 'moderate') return 'sev-moderate';
+      return 'sev-mild';
+    }
+
+    function renderReport(report){
+      if(report.capture_quality && report.capture_quality.usable === false){
+        document.getElementById('scanSummary').textContent = report.summary || 'The photo was unclear — please retake it in brighter, even light.';
+        document.getElementById('scanObsList').innerHTML = '';
+        document.getElementById('scanFocusWrap').style.display = 'none';
+        document.getElementById('scanLeadForm').style.display = 'none';
+        document.getElementById('scanDisclaimer').textContent = report.disclaimer || '';
+        showStage('report');
+        return;
+      }
+      document.getElementById('scanLeadForm').style.display = 'flex';
+      document.getElementById('scanSummary').textContent = report.summary || '';
+
+      const obsList = document.getElementById('scanObsList');
+      obsList.innerHTML = '';
+      (report.observations || []).forEach(obs => {
+        const card = document.createElement('div');
+        card.className = 'scan-obs-card ' + severityClass(obs.severity);
+        card.innerHTML = `
+          <div class="scan-obs-top">
+            <span class="scan-obs-concern">${escapeHtml((obs.concern||'').replace(/_/g,' '))}</span>
+            <span class="scan-obs-sev">${escapeHtml(obs.severity||'')}</span>
+          </div>
+          <div class="scan-obs-area">${escapeHtml((obs.area||'').replace(/_/g,' '))}</div>
+          <div class="scan-obs-note">${escapeHtml(obs.note||'')}</div>`;
+        obsList.appendChild(card);
+      });
+
+      const focusWrap = document.getElementById('scanFocusWrap');
+      const focusPills = document.getElementById('scanFocusPills');
+      focusPills.innerHTML = '';
+      if(report.suggested_focus_areas && report.suggested_focus_areas.length){
+        focusWrap.style.display = 'block';
+        report.suggested_focus_areas.forEach(f => {
+          const pill = document.createElement('span');
+          pill.className = 'scan-focus-pill';
+          pill.textContent = f;
+          focusPills.appendChild(pill);
+        });
+      }else{
+        focusWrap.style.display = 'none';
+      }
+
+      document.getElementById('scanDisclaimer').textContent = report.disclaimer || 'This is an AI-generated indicative assessment, not a medical diagnosis.';
+      showStage('report');
+    }
+
+    function escapeHtml(str){
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    document.getElementById('scanAgainBtn').addEventListener('click', () => { lastReport = null; startCamera(); });
+
+    document.getElementById('scanLeadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const orig = btn.textContent;
+      btn.textContent = 'Sending…'; btn.disabled = true;
+      try{
+        const res = await fetch(SCAN_API_BASE + '/api/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('scanLeadName').value,
+            age: document.getElementById('scanLeadAge').value || null,
+            phone: document.getElementById('scanLeadPhone').value,
+            city: document.getElementById('scanLeadCity').value,
+            report_summary: lastReport ? lastReport.summary : '',
+            suggested_focus_areas: lastReport ? lastReport.suggested_focus_areas : [],
+            source: 'instagram_ad_skin_scan'
+          })
+        });
+        if(!res.ok) throw new Error();
+        const t = document.getElementById('toast');
+        t.textContent = "✦ Report sent! Dr. Megha's team will call you shortly.";
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 5500);
+        btn.textContent = 'Sent ✓';
+      }catch{
+        btn.textContent = orig; btn.disabled = false;
+      }
+    });
+  })();
 </script>
 </body>
 </html>
