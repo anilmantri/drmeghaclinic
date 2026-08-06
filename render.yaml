@@ -6,8 +6,8 @@
 # and provisions everything below automatically.
 
 databases:
-  - name: drmegha-leads
-    plan: free
+  #- name: drmegha-leads
+   # plan: free
     databaseName: drmegha_leads
     user: drmegha
 
