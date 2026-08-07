@@ -10,17 +10,29 @@
  *   GET  /health     — plain 200 OK, for Render health checks
  *
  * Required environment variables (set in Render dashboard, see README.md):
- *   ANTHROPIC_API_KEY   — Anthropic API key, server-side only, never exposed to browser
- *   DATABASE_URL         — Postgres connection string (Render provides this automatically
- *                           if you link a Render PostgreSQL database to this service)
- *   ALLOWED_ORIGIN        — e.g. "https://drmegha.in" — locks down CORS
- *   ADMIN_KEY             — shared secret to view saved leads via GET /api/leads
- *   WEB3FORMS_KEY         — optional, Web3Forms access key for lead email notifications
+ *   AI_PROVIDER            — "anthropic" | "gemini". Selects which vision API /api/scan uses.
+ *                            Default: "anthropic" if unset or invalid.
+ *   ANTHROPIC_API_KEY       — required when AI_PROVIDER=anthropic
+ *   GEMINI_API_KEY          — required when AI_PROVIDER=gemini. Note: whether this key runs on
+ *                            Gemini's free or paid tier is controlled by billing on the Google
+ *                            Cloud project behind the key, not by this app — enable billing on
+ *                            that project when you're ready for production traffic.
+ *   DATABASE_URL            — Postgres connection string (Render provides this automatically
+ *                             if you link a Render PostgreSQL database to this service)
+ *   ALLOWED_ORIGIN          — e.g. "https://drmegha.in" — locks down CORS
+ *   ADMIN_KEY               — shared secret to view saved leads via GET /api/leads
+ *   WEB3FORMS_KEY           — optional, Web3Forms access key for lead email notifications
+ *
+ * Cost control: incoming images are resized to max 1024px and re-compressed
+ * to JPEG @ 80% quality (via sharp) before being sent to the vision API.
+ * This significantly cuts per-scan vision token cost with negligible impact
+ * on analysis quality for this use case.
  */
 
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const sharp = require('sharp');
 
 const app = express();
 app.use(express.json({ limit: '15mb' })); // 3 images * ~4-5mb base64 headroom
@@ -28,8 +40,26 @@ app.use(express.json({ limit: '15mb' })); // 3 images * ~4-5mb base64 headroom
 const PORT = process.env.PORT || 3000;
 const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = 'gemini-3.5-flash';
 const ADMIN_KEY = process.env.ADMIN_KEY;
 const WEB3FORMS_KEY = process.env.WEB3FORMS_KEY;
+
+const VALID_PROVIDERS = new Set(['anthropic', 'gemini']);
+const rawProvider = String(process.env.AI_PROVIDER || '').toLowerCase();
+const AI_PROVIDER = VALID_PROVIDERS.has(rawProvider) ? rawProvider : 'anthropic';
+if (process.env.AI_PROVIDER && !VALID_PROVIDERS.has(rawProvider)) {
+  console.error(`AI_PROVIDER="${process.env.AI_PROVIDER}" is not valid (use "anthropic" or "gemini"). Falling back to "anthropic".`);
+}
+
+console.log(`AI provider: ${AI_PROVIDER === 'gemini' ? `Gemini (${GEMINI_MODEL})` : 'Anthropic'}`);
+
+if (AI_PROVIDER === 'gemini' && !GEMINI_API_KEY) {
+  console.error('AI_PROVIDER is "gemini" but GEMINI_API_KEY is not set. Set it in your environment variables.');
+}
+if (AI_PROVIDER === 'anthropic' && !ANTHROPIC_API_KEY) {
+  console.error('AI_PROVIDER is "anthropic" but ANTHROPIC_API_KEY is not set. Set it in your environment variables.');
+}
 
 const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // ~6MB raw base64 ceiling per image
 const MAX_IMAGES = 3;
@@ -85,6 +115,24 @@ function clientIp(req) {
   return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown').split(',')[0].trim();
 }
 
+/**
+ * Resizes and compresses a base64 image to cut Anthropic vision token cost.
+ * Claude's per-image token cost scales with pixel count, so downscaling to
+ * a sensible max dimension + moderate JPEG quality before sending it in
+ * meaningfully reduces cost with negligible impact on analysis quality for
+ * this use case (skin observations, not pixel-level diagnostics).
+ * @param {string} base64Data - raw base64 image data (no data: prefix)
+ * @returns {Promise<string>} compressed base64 JPEG data
+ */
+async function compressImage(base64Data) {
+  const inputBuffer = Buffer.from(base64Data, 'base64');
+  const outputBuffer = await sharp(inputBuffer)
+    .resize(1024, 1024, { fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 80 })
+    .toBuffer();
+  return outputBuffer.toString('base64');
+}
+
 const SCAN_SYSTEM_PROMPT = `You are assisting a licensed dermatology clinic with an AI-generated indicative skin observation tool, used only for marketing/lead purposes -- never as a medical diagnosis.
 
 You will be shown up to 3 selfies of the same person: front-facing, left profile, and right profile, each labeled. Use all provided angles together to form a fuller picture -- e.g. cheeks and jawline are often clearer in profile shots. Return ONLY valid JSON (no markdown fences, no preamble) matching exactly this schema:
@@ -125,7 +173,7 @@ app.post('/api/scan', async (req, res) => {
   }
 
   const validAngles = new Set(['front', 'left', 'right']);
-  const content = [];
+  const compressedImages = []; // [{ angle, data }]
   for (const img of images) {
     if (!img || typeof img.data !== 'string' || !validAngles.has(img.angle)) {
       return res.status(400).json({ error: 'Invalid image entry' });
@@ -136,36 +184,22 @@ app.post('/api/scan', async (req, res) => {
     if (!/^[A-Za-z0-9+/=]+$/.test(img.data.slice(0, 100))) {
       return res.status(400).json({ error: 'Invalid image data' });
     }
-    content.push({ type: 'text', text: `Angle: ${img.angle}` });
-    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img.data } });
-  }
-  content.push({ type: 'text', text: 'Analyze these photos per the schema, using all angles together.' });
 
-  try {
-    const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
-        system: SCAN_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content }],
-      }),
-    });
-
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text().catch(() => '');
-      console.error('Anthropic API error:', anthropicRes.status, errText);
-      return res.status(502).json({ error: 'Analysis service is temporarily unavailable.' });
+    let compressedData;
+    try {
+      compressedData = await compressImage(img.data);
+    } catch (err) {
+      console.error('Image compression failed:', err);
+      return res.status(400).json({ error: 'Could not process one of the images. Please retake and try again.' });
     }
 
-    const data = await anthropicRes.json();
-    const textBlock = (data.content || []).find((b) => b.type === 'text');
-    const raw = (textBlock?.text || '').trim().replace(/^```json|```$/g, '').trim();
+    compressedImages.push({ angle: img.angle, data: compressedData });
+  }
+
+  try {
+    const raw = AI_PROVIDER === 'gemini'
+      ? await callGemini(compressedImages)
+      : await callAnthropic(compressedImages);
 
     let report;
     try {
@@ -179,9 +213,83 @@ app.post('/api/scan', async (req, res) => {
     return res.status(200).json(report);
   } catch (err) {
     console.error('Scan error:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(err.status || 500).json({ error: err.publicMessage || 'Internal server error' });
   }
 });
+
+/**
+ * Calls Anthropic's vision API with the given angle-labeled images.
+ * Used when AI_PROVIDER=anthropic.
+ */
+async function callAnthropic(compressedImages) {
+  const content = [];
+  for (const img of compressedImages) {
+    content.push({ type: 'text', text: `Angle: ${img.angle}` });
+    content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img.data } });
+  }
+  content.push({ type: 'text', text: 'Analyze these photos per the schema, using all angles together.' });
+
+  const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1200,
+      system: SCAN_SYSTEM_PROMPT,
+      messages: [{ role: 'user', content }],
+    }),
+  });
+
+  if (!anthropicRes.ok) {
+    const errText = await anthropicRes.text().catch(() => '');
+    console.error('Anthropic API error:', anthropicRes.status, errText);
+    throw { status: 502, publicMessage: 'Analysis service is temporarily unavailable.' };
+  }
+
+  const data = await anthropicRes.json();
+  const textBlock = (data.content || []).find((b) => b.type === 'text');
+  return (textBlock?.text || '').trim().replace(/^```json|```$/g, '').trim();
+}
+
+/**
+ * Calls Google's Gemini vision API with the given angle-labeled images.
+ * Used when AI_PROVIDER=gemini — typically cheaper for iterating on the widget
+ * without burning Anthropic credits. Swap GEMINI_MODEL at the top of this
+ * file if you want a different Gemini model.
+ */
+async function callGemini(compressedImages) {
+  const parts = [];
+  for (const img of compressedImages) {
+    parts.push({ text: `Angle: ${img.angle}` });
+    parts.push({ inline_data: { mime_type: 'image/jpeg', data: img.data } });
+  }
+  parts.push({ text: 'Analyze these photos per the schema, using all angles together.' });
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const geminiRes = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: SCAN_SYSTEM_PROMPT }] },
+      contents: [{ role: 'user', parts }],
+      generationConfig: { maxOutputTokens: 1200, temperature: 0.4 },
+    }),
+  });
+
+  if (!geminiRes.ok) {
+    const errText = await geminiRes.text().catch(() => '');
+    console.error('Gemini API error:', geminiRes.status, errText);
+    throw { status: 502, publicMessage: 'Analysis service is temporarily unavailable.' };
+  }
+
+  const data = await geminiRes.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
+  return text.trim().replace(/^```json|```$/g, '').trim();
+}
 
 app.post('/api/lead', async (req, res) => {
   const ip = clientIp(req);

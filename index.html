@@ -494,7 +494,27 @@
         <div style="font-size:.88rem;color:var(--c-ink-2)">Reading your skin's story…</div>
       </div>
 
-      <!-- STAGE: REPORT -->
+      <!-- STAGE: LEAD GATE (mandatory before report is shown) -->
+      <div class="scan-stage" data-scan-stage="leadgate">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:1.6rem;margin-bottom:8px">✦</div>
+          <p style="font-size:.95rem;color:var(--c-ink);font-weight:600;margin-bottom:6px">Your skin snapshot is ready</p>
+          <p style="font-size:.8rem;color:var(--c-ink-3);line-height:1.55">Enter your details below to view your personalized results.</p>
+        </div>
+        <form class="scan-lead-form" id="scanLeadForm">
+          <div class="scan-lead-row">
+            <input type="text" id="scanLeadName" placeholder="Your name *" required/>
+            <input type="number" id="scanLeadAge" placeholder="Age (optional)" min="1" max="120"/>
+          </div>
+          <input type="tel" id="scanLeadPhone" placeholder="Phone / WhatsApp *" required/>
+          <input type="text" id="scanLeadCity" placeholder="City *" required/>
+          <button type="submit" class="btn btn-gold scan-btn">✦ View My Skin Report</button>
+        </form>
+        <p class="scan-fine" id="scanLeadGateError" style="text-align:center;margin-top:10px;color:#B05A3A;display:none"></p>
+        <p class="scan-fine" style="text-align:center;margin-top:14px">We'll only use these details to share your report and, if you'd like, arrange a callback.</p>
+      </div>
+
+      <!-- STAGE: REPORT (revealed only after lead details are submitted) -->
       <div class="scan-stage" data-scan-stage="report">
         <p class="eyebrow">Your Snapshot</p>
         <div class="scan-summary" id="scanSummary"></div>
@@ -503,18 +523,17 @@
           <div class="scan-focus-title">Worth Discussing With Dr. Megha</div>
           <div class="scan-focus-pills" id="scanFocusPills"></div>
         </div>
-
-        <form class="scan-lead-form" id="scanLeadForm">
-          <div class="scan-lead-row">
-            <input type="text" id="scanLeadName" placeholder="Your name *" required/>
-            <input type="number" id="scanLeadAge" placeholder="Age (optional)" min="1" max="120"/>
-          </div>
-          <input type="tel" id="scanLeadPhone" placeholder="Phone / WhatsApp *" required/>
-          <input type="text" id="scanLeadCity" placeholder="City *" required/>
-          <button type="submit" class="btn btn-gold scan-btn">Send My Report &amp; Book a Callback</button>
-        </form>
+        <div id="scanCtaWrap">
+          <button class="btn btn-gold scan-btn" id="scanBookBtn" style="margin-bottom:10px">Book my consultation →</button>
+        </div>
         <button class="scan-again-link" id="scanAgainBtn">Scan again</button>
         <p class="scan-disclaimer" id="scanDisclaimer"></p>
+      </div>
+
+      <!-- STAGE: RETAKE (unusable capture — no gate needed, nothing to protect) -->
+      <div class="scan-stage" data-scan-stage="retake" style="text-align:center;padding:36px 32px">
+        <p style="font-size:.9rem;color:var(--c-ink);margin-bottom:16px" id="scanRetakeMsg"></p>
+        <button class="btn btn-gold scan-btn" id="scanRetakeMsgBtn" style="width:auto;display:inline-flex;padding:12px 26px">Retake Photos</button>
       </div>
 
       <!-- STAGE: ERROR -->
@@ -937,11 +956,23 @@
         }
         const report = await res.json();
         lastReport = report;
-        renderReport(report);
+
+        if(report.capture_quality && report.capture_quality.usable === false){
+          // Nothing valuable to protect here — just tell them to retake, no lead gate needed.
+          document.getElementById('scanRetakeMsg').textContent = report.summary || 'The photos were unclear — please retake them in brighter, even light.';
+          showStage('retake');
+        }else{
+          // Report is ready but stays hidden until contact details are submitted.
+          document.getElementById('scanLeadForm').reset();
+          document.getElementById('scanLeadGateError').style.display = 'none';
+          showStage('leadgate');
+        }
       }catch(err){
         showError(err.message || "We couldn't complete the analysis. Please try again.");
       }
     });
+
+    document.getElementById('scanRetakeMsgBtn').addEventListener('click', () => { lastReport = null; startCamera(); });
 
     function severityClass(sev){
       if(sev === 'noticeable') return 'sev-noticeable';
@@ -950,16 +981,6 @@
     }
 
     function renderReport(report){
-      if(report.capture_quality && report.capture_quality.usable === false){
-        document.getElementById('scanSummary').textContent = report.summary || 'The photo was unclear — please retake it in brighter, even light.';
-        document.getElementById('scanObsList').innerHTML = '';
-        document.getElementById('scanFocusWrap').style.display = 'none';
-        document.getElementById('scanLeadForm').style.display = 'none';
-        document.getElementById('scanDisclaimer').textContent = report.disclaimer || '';
-        showStage('report');
-        return;
-      }
-      document.getElementById('scanLeadForm').style.display = 'flex';
       document.getElementById('scanSummary').textContent = report.summary || '';
 
       const obsList = document.getElementById('scanObsList');
@@ -1003,12 +1024,17 @@
     }
 
     document.getElementById('scanAgainBtn').addEventListener('click', () => { lastReport = null; startCamera(); });
+    document.getElementById('scanBookBtn').addEventListener('click', () => {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+    });
 
     document.getElementById('scanLeadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = e.target.querySelector('button[type="submit"]');
+      const errEl = document.getElementById('scanLeadGateError');
+      errEl.style.display = 'none';
       const orig = btn.textContent;
-      btn.textContent = 'Sending…'; btn.disabled = true;
+      btn.textContent = 'Loading your results…'; btn.disabled = true;
       try{
         const res = await fetch(SCAN_API_BASE + '/api/lead', {
           method: 'POST',
@@ -1024,12 +1050,12 @@
           })
         });
         if(!res.ok) throw new Error();
-        const t = document.getElementById('toast');
-        t.textContent = "✦ Report sent! Dr. Megha's team will call you shortly.";
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 5500);
-        btn.textContent = 'Sent ✓';
+        btn.textContent = orig; btn.disabled = false;
+        // Only now do we reveal the actual report.
+        renderReport(lastReport);
       }catch{
+        errEl.textContent = "We couldn't save your details. Please check them and try again.";
+        errEl.style.display = 'block';
         btn.textContent = orig; btn.disabled = false;
       }
     });
