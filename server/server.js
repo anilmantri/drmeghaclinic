@@ -116,6 +116,32 @@ function clientIp(req) {
 }
 
 /**
+ * Server-side safety net: strips "dermat*" words (dermatologist, dermatology,
+ * dermat, etc.) from every string field in the report, replacing them with a
+ * neutral phrase. The system prompt already instructs the model not to use
+ * these words, but this guarantees it even if the model doesn't comply.
+ */
+function sanitizeReportText(report) {
+  const pattern = /\bdermat\w*/gi;
+  const clean = (str) => (typeof str === 'string' ? str.replace(pattern, 'skin expert') : str);
+
+  if (report && typeof report === 'object') {
+    if (typeof report.summary === 'string') report.summary = clean(report.summary);
+    if (typeof report.disclaimer === 'string') report.disclaimer = clean(report.disclaimer);
+    if (Array.isArray(report.suggested_focus_areas)) {
+      report.suggested_focus_areas = report.suggested_focus_areas.map(clean);
+    }
+    if (Array.isArray(report.observations)) {
+      report.observations = report.observations.map((obs) => ({
+        ...obs,
+        note: clean(obs?.note),
+      }));
+    }
+  }
+  return report;
+}
+
+/**
  * Resizes and compresses a base64 image to cut Anthropic vision token cost.
  * Claude's per-image token cost scales with pixel count, so downscaling to
  * a sensible max dimension + moderate JPEG quality before sending it in
@@ -149,6 +175,7 @@ You will be shown up to 3 selfies of the same person: front-facing, left profile
 
 Rules:
 - Never use clinical diagnosis terms (no "rosacea", "melasma", "eczema" etc) -- describe only visible traits like redness, pigmentation, texture, pores.
+- Never use the words "dermatologist", "dermatology", "dermat", or any similar variant in your output -- refer to Dr. Megha by name, or use "skin expert" / "our team" instead.
 - If lighting is poor across the images, a face isn't clearly visible in one or more of them, or an image does not show a human face, set capture_quality.usable to false, keep observations empty, and explain in summary which angle(s) need a retake.
 - Keep tone warm and encouraging, never alarming.
 - Return 4-6 observations maximum for a usable set, drawing from whichever angle shows each concern most clearly.
@@ -208,6 +235,8 @@ app.post('/api/scan', async (req, res) => {
       console.error('Failed to parse model output as JSON:', raw);
       return res.status(502).json({ error: 'Could not parse analysis. Please try again.' });
     }
+
+    report = sanitizeReportText(report);
 
     // Images are never persisted — processed in memory only, discarded after this response.
     return res.status(200).json(report);
@@ -276,7 +305,14 @@ async function callGemini(compressedImages) {
     body: JSON.stringify({
       system_instruction: { parts: [{ text: SCAN_SYSTEM_PROMPT }] },
       contents: [{ role: 'user', parts }],
-      generationConfig: { maxOutputTokens: 1200, temperature: 0.4 },
+      generationConfig: {
+        // Gemini 3.x models "think" before answering, and thinking tokens are
+        // deducted from maxOutputTokens. Flash models can't fully disable
+        // thinking, so we set the lowest level and budget generous headroom
+        // for both the hidden thinking and the visible JSON output.
+        maxOutputTokens: 3000,
+        thinkingConfig: { thinkingLevel: 'low' },
+      },
     }),
   });
 
@@ -287,6 +323,10 @@ async function callGemini(compressedImages) {
   }
 
   const data = await geminiRes.json();
+  const finishReason = data?.candidates?.[0]?.finishReason;
+  if (finishReason === 'MAX_TOKENS') {
+    console.error('Gemini response was cut off by maxOutputTokens (thinking + output exceeded budget). Consider raising maxOutputTokens further.');
+  }
   const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('') || '';
   return text.trim().replace(/^```json|```$/g, '').trim();
 }
