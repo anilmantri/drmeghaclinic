@@ -22,8 +22,12 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     envVars:
+      - key: AI_PROVIDER
+        value: "gemini"       # switch to "anthropic" for production, or keep "gemini" with billing enabled
       - key: ANTHROPIC_API_KEY
         sync: false          # set manually in the dashboard — never commit secrets
+      - key: GEMINI_API_KEY
+        sync: false
       - key: WEB3FORMS_KEY
         sync: false
       - key: ADMIN_KEY
@@ -39,7 +43,6 @@ services:
   - type: web
     name: drmegha-site
     runtime: static
-    plan: free
     buildCommand: ""
     staticPublishPath: .
     routes:

@@ -129,13 +129,48 @@ Returns the most recent 500 leads as JSON, newest first.
   if you scale to multiple instances later, move rate limiting to Postgres
   or Redis.
 
+## Switching between Gemini and Anthropic
+
+The backend supports two vision providers, controlled by one environment
+variable: `AI_PROVIDER`.
+
+| `AI_PROVIDER` | Provider | Model | Requires |
+|---|---|---|---|
+| `gemini` | Google Gemini | `gemini-3.5-flash` | `GEMINI_API_KEY` |
+| `anthropic` (default) | Anthropic | `claude-sonnet-4-6` | `ANTHROPIC_API_KEY` |
+
+Both return the same JSON schema, so nothing else in the app changes when
+you switch — just the env var and the matching API key.
+
+**Free vs. paid Gemini** isn't a setting in this app — it's controlled by
+whether billing is enabled on the Google Cloud project behind your
+`GEMINI_API_KEY`. Without billing enabled, that key runs on the free tier
+(low daily request limits, and Google's terms allow using free-tier content
+to improve their products). Enable billing on that project in Google Cloud
+Console when you're ready to move real patient traffic onto Gemini — this
+removes the daily limits and stops your data from being used for training,
+with no code changes needed here.
+
+**Recommended path:**
+1. Start with `AI_PROVIDER=gemini` and a free-tier `GEMINI_API_KEY` while you
+   test the widget end-to-end (few requests, zero cost).
+2. Once you're ready for production, either:
+   - Enable billing on that same Google Cloud project (stays on `gemini`), or
+   - Switch to `AI_PROVIDER=anthropic` with your Anthropic key.
+
+Set `AI_PROVIDER` in your Render web service → **Environment**, then
+redeploy. The server logs which provider is active on startup.
+
 ## Cost expectations
 
-Each scan is one Claude API vision call (~1200 output tokens, up to 3 image
-inputs). At typical Instagram-ad-driven volumes (tens to low hundreds of
-scans/day), this stays well within a few dollars a month on the API side.
-Render's free tier covers light traffic; a paid Starter web service
-(~$7/month) removes the spin-down delay once you're running real campaigns.
+Each scan is one Claude API vision call, up to 3 image inputs. Every image is
+resized to a max of 1024px and re-compressed to JPEG @ 80% quality server-side
+before being sent to the API — this cuts vision token cost substantially with
+no meaningful loss in analysis quality for skin-observation purposes. At
+typical Instagram-ad-driven volumes (tens to low hundreds of scans/day), this
+stays well within a few dollars a month on the API side. Render's free tier
+covers light traffic; a paid Starter web service (~$7/month) removes the
+spin-down delay once you're running real campaigns.
 
 ## Extending this later
 
